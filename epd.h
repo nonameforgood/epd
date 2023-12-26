@@ -1,5 +1,8 @@
 #include "gj/base.h"
 
+struct Epaper;
+
+typedef void (*EpdCallback)(Epaper *epd, uint32_t cookie, bool success);
 
 
 struct Epaper
@@ -25,6 +28,11 @@ struct Epaper
     uint16_t m_height;
   } m_viewport;
 
+  EpdCallback m_cb;
+  uint32_t m_cookie;
+  uint32_t m_waitCount;
+  uint32_t m_cbDelay = 100;
+
   uint8_t m_rt;
 };
 
@@ -49,16 +57,21 @@ void SetViewport(Epaper &epd, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void FillBox(Epaper &epd, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t colBit);
 void FillBox8(Epaper &epd, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t innerCol, uint8_t outerCol);
 
+void FillBox8(Epaper &epd, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t innerCol, uint8_t outerCol, EpdCallback cb, uint32_t cookie);
+
 void ClearEpd(Epaper &epd, uint8_t colBit);
 
 void WriteChar(Epaper &epd, uint32_t x, uint32_t y, uint8_t c, uint8_t col, int32_t rotate);
 void WriteString(Epaper &epd, uint32_t x, uint32_t y, const char *string, uint8_t col, int32_t rotate);
+void WriteString(Epaper &epd, uint32_t x, uint32_t y, const char *string, uint8_t col, int32_t rotate, EpdCallback cb, uint32_t cookie);
 
 void WriteImage(Epaper &epd, uint8_t xDiv8, uint8_t y, uint8_t wDiv8, uint8_t h, const void *data, uint16_t rowPitch);
 
 
-void RefreshEdp(Epaper &epd);
-void RefreshPartialEdp(Epaper &epd);
+
+bool RefreshEdp(Epaper &epd);
+void RefreshEdp(Epaper &epd, EpdCallback cb, uint32_t cookie);
+bool RefreshPartialEdp(Epaper &epd);
 
 void SleepEpd(Epaper &epd);
 
@@ -67,7 +80,8 @@ void SleepEpd(Epaper &epd);
 void SetCurrentRT(Epaper &epd, uint8_t rt);
 
 void InitEpdSpi(int clk, int data);
+void TermEpdSpi();
 
-void ResetEpd(Epaper &epd);
-void InitEpd(Epaper &epd);
-void InitPartialEpd(Epaper &epd);
+void ResetEpd(Epaper &epd, bool wait = true);
+bool InitEpd(Epaper &epd);
+bool InitPartialEpd(Epaper &epd);
